@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "runedge"
+version = "0.1.0"
+description = "Offline Qdrant Edge RAG demo for the Indian Budget PDF."
+requires-python = ">=3.11"
+dependencies = [
+    "edgeparse==0.2.5",
+    "huggingface-hub==1.19.0",
+    "litert-lm-api==0.13.1",
+    "qdrant-edge-py==0.7.2",
+    "sentence-transformers==5.6.0",
+    "streamlit==1.58.0",
+]
+
+[project.scripts]
+runedge-download-model = "download_model:main"
+runedge-index = "index:main"
+
+[tool.setuptools]
+py-modules = [
+    "app",
+    "download_model",
+    "index",
+    "quiet_native",
+    "ui",
+]
