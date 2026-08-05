@@ -1,5 +1,4 @@
 from pathlib import Path
-
 import edgeparse
 from qdrant_edge import *
 from sentence_transformers import SentenceTransformer
@@ -14,7 +13,7 @@ class HybridDocumentIngestion:
         self,
         document_path: str,
         model_name: str,
-        chunk_size: int = 1024,
+        chunk_size: int = 756,
         overlap: int = 0,
     ) -> None:
         self.document_path = Path(document_path)

@@ -27,7 +27,7 @@ class DocumentIngestion:
             vectors=EdgeVectorParams(size=MODEL_DIM, distance=Distance.Cosine),
             quantization_config=TurboQuantQuantizationConfig(
                 always_ram=True,
-                bits=TurboQuantBitSize.Bits4,
+                bits=TurboQuantBitSize.Bits4, # x8 
             ),
         )
 

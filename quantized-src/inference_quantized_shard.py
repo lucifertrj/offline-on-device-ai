@@ -21,6 +21,13 @@ class GemmaInference:
         self.model = SentenceTransformer(embed_model_name)
         self.shard = EdgeShard.load(shard_path)
         self.gemma_model_path = gemma_model_path
+        self.engine = litert_lm.Engine(
+            self.gemma_model_path,
+            backend=litert_lm.Backend.GPU(),
+        )
+
+    def close(self) -> None:
+        self.engine.close()
 
     def retrieve_context(self, user_query: str, limit: int = 2) -> str:
         query_vector = self.model.encode_query(user_query).tolist()
@@ -45,20 +52,17 @@ class GemmaInference:
             )
         ]
 
-        with litert_lm.Engine(
-            self.gemma_model_path,
-            backend=litert_lm.Backend.CPU(),
-        ) as engine:
-            with engine.create_conversation(messages=messages) as conversation:
-                response = conversation.send_message(
-                    f"Context:\n{context}\n\nQuestion:\n{user_query}"
-                )
+        with self.engine.create_conversation(messages=messages) as conversation:
+            response = conversation.send_message(
+                f"Context:\n{context}\n\nQuestion:\n{user_query}"
+            )
         return response["content"][0]["text"]
 
 def main() -> None:
     inference = GemmaInference()
     user_query = "what is the budget alloted for Biopharma Shakti project?"
     print(inference.answer(user_query))
+    inference.close()
 
 if __name__ == "__main__":
     main()
