@@ -21,6 +21,10 @@ def load_embedder() -> SentenceTransformer:
 def load_shard() -> EdgeShard:
     return EdgeShard.load(SHARD_PATH)
 
+@st.cache_resource
+def load_engine() -> litert_lm.Engine:
+    return litert_lm.Engine(MODEL_PATH, backend=litert_lm.Backend.GPU())
+
 def retrieve_context(user_query: str, limit: int = 2) -> str:
     model = load_embedder()
     shard = load_shard()
@@ -34,7 +38,7 @@ def retrieve_context(user_query: str, limit: int = 2) -> str:
     )
     return "".join(point.payload["text"] for point in results)
 
-def reply(user_query: str) -> str:
+def reply_stream(user_query: str):
     context = retrieve_context(user_query)
     messages = [
         litert_lm.Message.system(
@@ -42,14 +46,20 @@ def reply(user_query: str) -> str:
             "Answer the user question using only the provided context. "
             "If the answer is not in the context, say: I don't know based on the provided context. "
             "Do not guess or add extra explanation."
+            "Answer in 1-2 short sentences. Do not elaborate unless told by user"
         )
     ]
     prompt = f"Context:\n{context}\n\nQuestion:\n{user_query}"
 
-    with litert_lm.Engine(MODEL_PATH, backend=litert_lm.Backend.CPU()) as engine:
-        with engine.create_conversation(messages=messages) as conversation:
-            response = conversation.send_message(prompt)
-            return response["content"][0]["text"]
+    engine = load_engine()
+    with engine.create_conversation(
+        messages=messages,
+        sampler_config=litert_lm.SamplerConfig(top_k=1),
+    ) as conversation:
+        for chunk in conversation.send_message_async(prompt):
+            for item in chunk.get("content", []):
+                if item.get("type") == "text" and item.get("text"):
+                    yield item["text"]
 
 st.title("On-device Offline Chat")
 
@@ -66,8 +76,8 @@ if prompt := st.chat_input("Ask something"):
         st.write(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            answer = reply(prompt)
-        st.write(answer)
+        answer = st.write_stream(reply_stream(prompt))
 
     st.session_state.messages.append({"role": "assistant", "content": answer})
+
+# what is the focus on Purvodaya for north-east?
