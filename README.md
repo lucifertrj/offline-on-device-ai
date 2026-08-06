@@ -1,5 +1,7 @@
 # Offline On-Device AI Application
 
+[![Watch on YouTube](https://img.youtube.com/vi/EHEN6Ce-9Ps/maxresdefault.jpg)](https://www.youtube.com/watch?v=EHEN6Ce-9Ps)
+
 Offline RAG demo that indexes `budget_2026.pdf` into Qdrant Edge, embeds queries
 with a local Qwen embedding model, and answers from the retrieved context with a
 local Gemma-4 LiteRT model.
