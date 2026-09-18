@@ -11,7 +11,7 @@ silence_stderr()
 
 EMBED_MODEL_NAME = "models/qwen3_embed"
 MODEL_PATH = "models/gemma4/gemma-4-E2B-it.litertlm"
-SHARD_PATH = "qdrant_edge_eg"
+SHARD_PATH = "db"
 
 @st.cache_resource
 def load_embedder() -> SentenceTransformer:
@@ -79,5 +79,3 @@ if prompt := st.chat_input("Ask something"):
         answer = st.write_stream(reply_stream(prompt))
 
     st.session_state.messages.append({"role": "assistant", "content": answer})
-
-# what is the focus on Purvodaya for north-east?

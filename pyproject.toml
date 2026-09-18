@@ -11,6 +11,7 @@ dependencies = [
     "edgeparse==0.2.5",
     "huggingface-hub==1.19.0",
     "litert-lm-api==0.13.1",
+    "psutil==7.1.3",
     "qdrant-edge-py==0.7.2",
     "sentence-transformers==5.6.0",
     "streamlit==1.58.0",
