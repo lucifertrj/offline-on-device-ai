@@ -9,20 +9,15 @@ from utils import Report
 os.environ["HF_HUB_OFFLINE"] = "1"
 silence_stderr()
 
-EMBED_MODEL_PATH = "models/embeddinggemma-2-740m.litertlm"
-SHARD_PATH = "db_gemma"  # shard built by index_gemma.py (768-dim EmbeddingGemma-2)
+EMBED_MODEL_NAME = "models/embeddinggemma-2-740m.litertlm"
+SHARD_PATH = "db_gemma"
 GEMMA4_LITELLM = "models/gemma4/gemma-4-E2B-it.litertlm"
-# LiteRT-LM writes compiled kernel/weight caches; keep them out of models/.
 CACHE_DIR = ".cache"
-# EmbeddingGemma-2 is prompt-conditioned; queries MUST match the template used
-# when the db_gemma shard was indexed (see index_gemma.py).
-# https://ai.google.dev/gemma/docs/embeddinggemma/model_card
-QUERY_PROMPT = "task: search result | query: {text}"
 
 class GemmaInference:
     def __init__(
         self,
-        embed_model_path: str = EMBED_MODEL_PATH,
+        embed_model_name: str = EMBED_MODEL_NAME,
         shard_path: str = SHARD_PATH,
         gemma_model_path: str = GEMMA4_LITELLM,
         report: Report | None = None,
@@ -31,8 +26,8 @@ class GemmaInference:
 
         os.makedirs(CACHE_DIR, exist_ok=True)
         with self.report.stage("load_embed_model"):
-            self.embed_engine = EmbeddingEngine(
-                embed_model_path, backend=Backend.GPU(), cache_dir=CACHE_DIR
+            self.model = EmbeddingEngine(
+                embed_model_name, backend=Backend.GPU(), cache_dir=CACHE_DIR
             )
 
         with self.report.stage("load_shard"):
@@ -47,12 +42,10 @@ class GemmaInference:
 
     def close(self) -> None:
         self.engine.close()
-        self.embed_engine.close()
+        self.model.close()
 
     def retrieve_context(self, user_query: str, limit: int = 2) -> str:
-        query_vector = self.embed_engine.compute_embedding(
-            QUERY_PROMPT.format(text=user_query)
-        ).embedding
+        query_vector = self.model.compute_embedding(user_query).embedding
         results = self.shard.query(
             QueryRequest(
                 query=Query.Nearest(query_vector),
